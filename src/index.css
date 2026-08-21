@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: #F8F9FA;
+    color: #0B0F19;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F3F5;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00A3AD;
+}
+
+/* Editorial pill button styles matching the reference */
+.pill-btn {
+  @apply inline-flex items-center justify-between gap-3 px-6 py-3.5 rounded-full font-medium transition-all duration-300;
+}
+
+.pill-tab {
+  @apply px-5 py-2.5 rounded-full text-xs md:text-sm font-semibold tracking-wide border transition-all duration-200 cursor-pointer select-none flex items-center gap-2;
+}
+
+.card-editorial {
+  @apply bg-[#F4F4F6] rounded-3xl md:rounded-[2.5rem] p-6 md:p-8 transition-all duration-300 border border-black/[0.04];
+}
+
+/* Floating badge */
+.badge-floating {
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md bg-white/90 shadow-sm border border-black/[0.05];
+}
+
+/* Circular icon button */
+.btn-circle-icon {
+  @apply w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300;
+}
+
+/* Glowing effects */
+.glow-panduit {
+  box-shadow: 0 0 40px -10px rgba(0, 163, 173, 0.35);
+}
