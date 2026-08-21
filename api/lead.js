@@ -87,9 +87,39 @@ export default async function handler(req, res) {
 
     const sessionCookieHeader = `csrftoken=${authCsrf}; sessionid=${sessionId}`;
 
-    // 3. Formatear la información del prospecto para el CRM
+    // 3. Crear o vincular el cliente en el CRM
+    let clienteId = null;
+    const nombreEmpresa = (empresa || nombre || 'Prospecto Google Ads').trim();
+
+    try {
+      const clientRes = await fetch(`${baseUrl}/app/api/quick-crear-cliente/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRFToken': authCsrf,
+          'X-Requested-With': 'XMLHttpRequest',
+          'Cookie': sessionCookieHeader,
+          'Referer': `${baseUrl}/app/home/`,
+        },
+        body: JSON.stringify({ nombre_empresa: nombreEmpresa }),
+      });
+
+      if (clientRes.ok) {
+        const clientData = await clientRes.json();
+        if (clientData && clientData.id) {
+          clienteId = clientData.id;
+        }
+      }
+    } catch (clientErr) {
+      console.warn('Advertencia al crear/obtener cliente:', clientErr);
+    }
+
+    // 4. Formatear la información detallada para las notas del prospecto
     const notasDetalladas = [
       `🎯 LEAD GENERADO DESDE GOOGLE ADS (Landing Panduit)`,
+      `• Contacto: ${nombre}`,
+      `• Empresa: ${empresa || 'No especificada'}`,
       `• Solución de interés: ${tipoProyecto || 'Cableado de Cobre UTP 6 y 6A'}`,
       `• Nodos / Puntos de red estimados: ${nodosEstimados || '50 - 150 nodos'}`,
       `• Ubicación / Ciudad: ${ciudad || 'No especificada'}`,
@@ -100,9 +130,8 @@ export default async function handler(req, res) {
     ].filter(Boolean).join('\n');
 
     const prospectoPayload = {
-      nombre: `Google Ads: ${empresa || 'Prospecto'} - ${tipoProyecto || 'Panduit'}`,
-      cliente: empresa || 'Empresa por Calificar',
-      cliente_email: correo,
+      nombre: `Google Ads: ${nombreEmpresa} - ${tipoProyecto || 'Cableado Panduit'}`,
+      cliente_id: clienteId,
       contacto: nombre,
       contacto_email: correo,
       telefono: telefono,
@@ -115,7 +144,7 @@ export default async function handler(req, res) {
       probabilidad: 10,
     };
 
-    // 4. Crear el prospecto en el endpoint del CRM
+    // 5. Crear el prospecto en el endpoint del CRM
     const createRes = await fetch(`${baseUrl}/app/api/crear-prospecto/`, {
       method: 'POST',
       headers: {
@@ -136,12 +165,17 @@ export default async function handler(req, res) {
       crmData = { status: createRes.status, statusText: createRes.statusText };
     }
 
-    return res.status(200).json({
-      success: true,
-      message: 'Prospecto registrado exitosamente en el CRM IAMET.',
+    const isSuccess = createRes.ok && crmData && crmData.success;
+
+    return res.status(isSuccess ? 200 : 400).json({
+      success: isSuccess,
+      message: isSuccess 
+        ? 'Prospecto registrado exitosamente en el CRM IAMET.' 
+        : 'No se pudo completar el registro en el CRM.',
+      prospectoId: crmData?.id || null,
       lead: {
         nombre,
-        empresa,
+        empresa: nombreEmpresa,
         correo,
         tipoProyecto,
       },
